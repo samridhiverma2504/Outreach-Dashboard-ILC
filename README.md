@@ -28,10 +28,11 @@
 ## Getting Started
 **Clone the Repository**
 ```bash
-git clone https://github.com/samridhiverma2504/ILC-Outreach-Dashboard
+git clone https://github.com/samridhiverma2504/Outreach-Dashboard-ILC
 ```
 ```bash
-cd ILC-Outreach-Dashboard
+cd Outreach-Dashboard-ILC
+cd client
 ```
 **Install Dependencies**
 ```bash
