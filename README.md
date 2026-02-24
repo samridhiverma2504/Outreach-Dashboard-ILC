@@ -32,6 +32,8 @@ git clone https://github.com/samridhiverma2504/Outreach-Dashboard-ILC
 ```
 ```bash
 cd Outreach-Dashboard-ILC
+```
+```bash
 cd client
 ```
 **Install Dependencies**
