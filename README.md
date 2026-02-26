@@ -1,4 +1,3 @@
-
 # Outreach Dashboard
   
   A React based dashboard for managing outreach at the Illinois Leadership Center.
