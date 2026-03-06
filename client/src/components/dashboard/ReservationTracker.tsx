@@ -246,16 +246,25 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
     toast.success("Event duplicated");
   };
 
+  const [pendingComplete, setPendingComplete] = useState<{ event: TablingEvent | PresentationEvent, interacted: number | "" } | null>(null);
+
   const handleMarkComplete = (event: TablingEvent | PresentationEvent) => {
-    if (activeTab === "tabling") {
+    setPendingComplete({ event, interacted: "" });
+  };
+
+  const confirmMarkComplete = () => {
+    if (!pendingComplete) return;
+    const { event, interacted } = pendingComplete;
+    if (activeTab === "tabling" || event.hasOwnProperty("startTime")) {
       const e = event as TablingEvent;
       setTablingEvents(tablingEvents.filter(x => x.id !== e.id));
-      setCompletedEvents([...completedEvents, { id: e.id, name: e.name, date: e.date, time: `${e.startTime} - ${e.endTime}`, location: e.location, interacted: "", source: "tabling", notes: e.notes || "", originalEvent: e }]);
+      setCompletedEvents([...completedEvents, { id: e.id, name: e.name, date: e.date, time: `${e.startTime} - ${e.endTime}`, location: e.location, interacted, source: "tabling", notes: e.notes || "", originalEvent: e }]);
     } else {
       const e = event as PresentationEvent;
       setPresentationEvents(presentationEvents.filter(x => x.id !== e.id));
-      setCompletedEvents([...completedEvents, { id: e.id, name: e.course, date: e.date, time: e.time, location: e.location, interacted: "", source: "presentations", notes: e.notes || "", originalEvent: e }]);
+      setCompletedEvents([...completedEvents, { id: e.id, name: e.course, date: e.date, time: e.time, location: e.location, interacted, source: "presentations", notes: e.notes || "", originalEvent: e }]);
     }
+    setPendingComplete(null);
     toast.success("Event marked as complete");
   };
 
@@ -462,16 +471,16 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
                   <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No completed events yet.</TableCell></TableRow>
                 ) : completedEvents.map(event => (
                   <TableRow key={event.id}>
-                    <TableCell className="text-center" style={topCell}>{event.name}</TableCell>
-                    <TableCell className="text-center capitalize" style={topCell}>{event.source === "tabling" ? "Tabling" : "Presentation"}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.time}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.location}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.name}</TableCell>
+                    <TableCell className="text-center capitalize" style={{ ...topCell, paddingTop: "16px" }}>{event.source === "tabling" ? "Tabling" : "Presentation"}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.time}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.location}</TableCell>
                     <TableCell className="text-center" style={topCell}>
                       <Input type="number" value={event.interacted} onChange={e => { const v = e.target.value; updateCompletedInteracted(event.id, v === "" ? "" : parseInt(v)); }} className="w-20 mx-auto" />
                     </TableCell>
-                    <TableCell style={notesCellStyle}><span className="text-sm text-muted-foreground">{event.notes}</span></TableCell>
-                    <TableCell style={topCell}>
+                    <TableCell style={{ ...notesCellStyle, paddingTop: "10px" }}><span className="text-sm text-muted-foreground">{event.notes}</span></TableCell>
+                    <TableCell style={{ ...topCell, paddingTop: "10px" }}>
                       <div className="flex justify-center gap-1">
                         <Button size="sm" variant="ghost" onClick={() => { setEditingEvent(event); setNewCompletedEvent({ name: event.name, date: event.date, time: event.time, location: event.location, interacted: event.interacted, notes: event.notes }); setIsDialogOpen(true); }} title="Edit"><Edit className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => handleDuplicate(event)} title="Duplicate"><Copy className="h-4 w-4" /></Button>
@@ -487,9 +496,15 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
         </CardContent>
       </Card>
 
-      {/* Dialog — standard centered modal with internal scroll */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={false}>
+        {/* Backdrop — closes dialog on click, sits behind the form */}
+        {isDialogOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/80"
+            onClick={() => setIsDialogOpen(false)}
+          />
+        )}
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto z-50">
           <DialogHeader>
             <DialogTitle>{editingEvent ? "Edit Event" : "Add Event"}</DialogTitle>
             <DialogDescription>Fill in event details below.</DialogDescription>
@@ -703,6 +718,32 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Mark Complete — interactions prompt */}
+      <Dialog open={!!pendingComplete} onOpenChange={(open) => { if (!open) setPendingComplete(null); }} modal={false}>
+        {pendingComplete && (
+          <div className="fixed inset-0 z-40 bg-black/80" onClick={() => setPendingComplete(null)} />
+        )}
+        <DialogContent className="sm:max-w-[360px] z-50">
+          <DialogHeader>
+            <DialogTitle>Mark as Complete</DialogTitle>
+            <DialogDescription>How many people did you interact with?</DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Input
+              type="number"
+              placeholder="e.g., 50 (optional)"
+              value={pendingComplete?.interacted ?? ""}
+              onChange={e => setPendingComplete(prev => prev ? { ...prev, interacted: e.target.value === "" ? "" : parseInt(e.target.value) } : prev)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingComplete(null)}>Cancel</Button>
+            <Button onClick={confirmMarkComplete}>Mark Complete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
