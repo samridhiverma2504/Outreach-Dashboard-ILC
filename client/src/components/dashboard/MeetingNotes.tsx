@@ -11,7 +11,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/components/ui/utils";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // ── Load Quill from CDN (once) ────────────────────────────────────────────────
 let quillLoadPromise: Promise<void> | null = null;
@@ -501,29 +500,11 @@ export function MeetingNotes() {
   };
 
 
-  // Force Radix dialog to be viewport-centered regardless of parent layout
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.id = 'dialog-viewport-fix';
-    style.textContent = `
-      [data-radix-dialog-overlay] { position: fixed !important; inset: 0 !important; z-index: 9998 !important; }
-      [data-radix-dialog-content] { position: fixed !important; top: 50vh !important; left: 50vw !important; transform: translate(-50%, -50%) !important; z-index: 9999 !important; margin: 0 !important; }
-    `;
-    if (!document.getElementById('dialog-viewport-fix')) {
-      document.head.appendChild(style);
-    }
-    return () => { document.getElementById('dialog-viewport-fix')?.remove(); };
-  }, []);
+
 
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Meeting Notes and Agendas</h2>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New {activeTab === 'notes' ? 'Note' : 'Agenda'}
-        </Button>
-      </div>
+      <h2 className="text-2xl font-bold tracking-tight">Meeting Notes and Agendas</h2>
 
       <div className="flex space-x-2 border-b">
         {(['notes', 'agendas'] as const).map(tab => (
@@ -539,10 +520,18 @@ export function MeetingNotes() {
         {/* Sidebar */}
         <Card className="flex flex-col h-full overflow-hidden flex-shrink-0" style={{ width: sidebarWidth }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">{activeTab === 'notes' ? 'All Notes' : 'All Agendas'}</CardTitle>
-            <CardDescription className="text-xs">
-              {filteredNotes.length} {activeTab === 'notes' ? 'note' : 'agenda'}{filteredNotes.length !== 1 ? 's' : ''}
-            </CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-base">{activeTab === 'notes' ? 'All Notes' : 'All Agendas'}</CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  {filteredNotes.length} {activeTab === 'notes' ? 'note' : 'agenda'}{filteredNotes.length !== 1 ? 's' : ''}
+                </CardDescription>
+              </div>
+              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                New
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-hidden p-0 pt-2">
             <ScrollArea className="h-full">
@@ -629,7 +618,7 @@ export function MeetingNotes() {
                   key={activeNote.id}
                   initialValue={activeNote.content}
                   onChange={handleUpdateNote}
-                  placeholder="Type your meeting notes here..."
+                  placeholder="Type your meeting notes here."
                 />
               </div>
             </>
@@ -641,89 +630,97 @@ export function MeetingNotes() {
         </div>
       </div>
 
-      {/* Add Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Create New {activeTab === 'notes' ? 'Note' : 'Agenda'}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>Meeting Date *</Label>
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newNoteDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {newNoteDate ? format(newNoteDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={newNoteDate}
-                    onSelect={(date) => { if (date) setNewNoteDate(date); setIsCalendarOpen(false); }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+      {/* Add Modal */}
+      {isAddDialogOpen && (
+        <div style={{position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+          onClick={() => setIsAddDialogOpen(false)}>
+          <div style={{position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)'}} />
+          <div style={{position: 'relative', background: 'white', borderRadius: '12px', padding: '24px', width: '425px', maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'}}
+            onClick={e => e.stopPropagation()}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+              <h2 style={{fontSize: '18px', fontWeight: 600, margin: 0}}>Create New {activeTab === 'notes' ? 'Note' : 'Agenda'}</h2>
+              <button onClick={() => setIsAddDialogOpen(false)} style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#666', lineHeight: 1}}>✕</button>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="newTitle">
-                Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span>
-              </Label>
-              <Input id="newTitle" placeholder={format(newNoteDate, 'MMMM d, yyyy')} value={newNoteTitle} onChange={(e) => setNewNoteTitle(e.target.value)} />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Meeting Date *</Label>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !newNoteDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newNoteDate ? format(newNoteDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={newNoteDate}
+                      onSelect={(date) => { if (date) setNewNoteDate(date); setIsCalendarOpen(false); }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="newTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span></Label>
+                <Input id="newTitle" placeholder={format(newNoteDate, 'MMMM d, yyyy')} value={newNoteTitle} onChange={(e) => setNewNoteTitle(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="noteTaker">Note Taker</Label>
+                <Input id="noteTaker" placeholder="Enter your name" value={newNoteTaker} onChange={(e) => setNewNoteTaker(e.target.value)} />
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="noteTaker">Note Taker</Label>
-              <Input id="noteTaker" placeholder="Enter your name" value={newNoteTaker} onChange={(e) => setNewNoteTaker(e.target.value)} />
+            <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px'}}>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleAddNote}>Create {activeTab === 'notes' ? 'Note' : 'Agenda'}</Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddNote}>Create {activeTab === 'notes' ? 'Note' : 'Agenda'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
-      {/* Edit Metadata Dialog */}
-      <Dialog open={isEditMetadataOpen} onOpenChange={setIsEditMetadataOpen}>
-        <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Meeting Details</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4 py-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>Meeting Date *</Label>
-              <Popover open={isEditCalendarOpen} onOpenChange={setIsEditCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editDate && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={editDate}
-                    onSelect={(date) => { if (date) setEditDate(date); setIsEditCalendarOpen(false); }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+      {/* Edit Metadata Modal */}
+      {isEditMetadataOpen && (
+        <div style={{position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+          onClick={() => setIsEditMetadataOpen(false)}>
+          <div style={{position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)'}} />
+          <div style={{position: 'relative', background: 'white', borderRadius: '12px', padding: '24px', width: '425px', maxWidth: '90vw', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'}}
+            onClick={e => e.stopPropagation()}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+              <h2 style={{fontSize: '18px', fontWeight: 600, margin: 0}}>Edit Meeting Details</h2>
+              <button onClick={() => setIsEditMetadataOpen(false)} style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#666', lineHeight: 1}}>✕</button>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="editTitle">
-                Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span>
-              </Label>
-              <Input id="editTitle" placeholder={format(editDate, 'MMMM d, yyyy')} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Meeting Date *</Label>
+                <Popover open={isEditCalendarOpen} onOpenChange={setIsEditCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editDate && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editDate ? format(editDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={editDate}
+                      onSelect={(date) => { if (date) setEditDate(date); setIsEditCalendarOpen(false); }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="editTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span></Label>
+                <Input id="editTitle" placeholder={format(editDate, 'MMMM d, yyyy')} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="editNoteTaker">Note Taker</Label>
+                <Input id="editNoteTaker" placeholder="e.g., Samridhi" value={editNoteTaker} onChange={(e) => setEditNoteTaker(e.target.value)} />
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="editNoteTaker">Note Taker</Label>
-              <Input id="editNoteTaker" placeholder="e.g., Samridhi" value={editNoteTaker} onChange={(e) => setEditNoteTaker(e.target.value)} />
+            <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px'}}>
+              <Button variant="outline" onClick={() => setIsEditMetadataOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveMetadata}>Save Changes</Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditMetadataOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveMetadata}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }

@@ -283,7 +283,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
   const getStatusColor = (status: RequestStatus) => {
     switch (status) {
       case "pending": return { backgroundColor: "#e8e5c3", color: "#111" };
-      case "submitted": return { backgroundColor: "#4f9581", color: "#111" };
+      case "submitted": return { backgroundColor: "#1a7e62", color: "#111" };
       case "n/a": return { backgroundColor: "#f3f3f5", color: "#111" };
       default: return {};
     }
