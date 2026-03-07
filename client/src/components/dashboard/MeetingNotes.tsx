@@ -516,23 +516,19 @@ export function MeetingNotes() {
         ))}
       </div>
 
-      <div className="flex-1 flex overflow-hidden gap-4">
+      <div className="flex-1 flex overflow-hidden gap-1">
         {/* Sidebar */}
         <Card className="flex flex-col h-full overflow-hidden flex-shrink-0" style={{ width: sidebarWidth }}>
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle className="text-base">{activeTab === 'notes' ? 'All Notes' : 'All Agendas'}</CardTitle>
-                <CardDescription className="text-xs mt-1">
-                  {filteredNotes.length} {activeTab === 'notes' ? 'note' : 'agenda'}{filteredNotes.length !== 1 ? 's' : ''}
-                </CardDescription>
-              </div>
-              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                New
-              </Button>
+          <div style={{padding: "16px 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+            <div>
+              <p className="text-sm font-semibold">{activeTab === 'notes' ? 'All Notes' : 'All Agendas'}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{filteredNotes.length} {activeTab === 'notes' ? 'note' : 'agenda'}{filteredNotes.length !== 1 ? 's' : ''}</p>
             </div>
-          </CardHeader>
+            <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              New
+            </Button>
+          </div>
           <CardContent className="flex-1 overflow-hidden p-0 pt-2">
             <ScrollArea className="h-full">
               <div className="space-y-1 px-2">
@@ -618,7 +614,7 @@ export function MeetingNotes() {
                   key={activeNote.id}
                   initialValue={activeNote.content}
                   onChange={handleUpdateNote}
-                  placeholder="Type your meeting notes here."
+                  placeholder="Type your meeting notes here..."
                 />
               </div>
             </>
