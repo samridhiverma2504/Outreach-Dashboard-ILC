@@ -497,14 +497,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={false}>
-        {/* Backdrop — closes dialog on click, sits behind the form */}
-        {isDialogOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/80"
-            onClick={() => setIsDialogOpen(false)}
-          />
-        )}
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto z-50">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto z-50 top-[5%]">    
           <DialogHeader>
             <DialogTitle>{editingEvent ? "Edit Event" : "Add Event"}</DialogTitle>
             <DialogDescription>Fill in event details below.</DialogDescription>
@@ -720,9 +713,6 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
       </Dialog>
       {/* Mark Complete — interactions prompt */}
       <Dialog open={!!pendingComplete} onOpenChange={(open) => { if (!open) setPendingComplete(null); }} modal={false}>
-        {pendingComplete && (
-          <div className="fixed inset-0 z-40 bg-black/80" onClick={() => setPendingComplete(null)} />
-        )}
         <DialogContent className="sm:max-w-[360px] z-50">
           <DialogHeader>
             <DialogTitle>Mark as Complete</DialogTitle>
