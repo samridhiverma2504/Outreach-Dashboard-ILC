@@ -3,24 +3,23 @@ import { EmailGenerator } from "./components/dashboard/EmailGenerator";
 import { ReservationTracker } from "./components/dashboard/ReservationTracker";
 import { InventoryTracker } from "./components/dashboard/InventoryTracker";
 import { MeetingNotes } from "./components/dashboard/MeetingNotes";
-import {
-  Mail,
-  CalendarCheck,
-  Package,
-  FileText,
-} from "lucide-react";
+import { Mail, CalendarCheck, Package, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import ilcLogo from "./ilc-logo.png";
 
-type View =
-  | "email-gen"
-  | "reservations"
-  | "inventory"
-  | "notes";
+type View = "email-gen" | "reservations" | "inventory" | "notes";
+
+const navItems = [
+  { view: "reservations" as View, icon: CalendarCheck, label: "Event Tracker" },
+  { view: "email-gen" as View, icon: Mail, label: "Email Generator" },
+  { view: "notes" as View, icon: FileText, label: "Meeting Notes & Agendas" },
+  { view: "inventory" as View, icon: Package, label: "Inventory" },
+];
 
 function App() {
   const [activeView, setActiveView] = useState<View>("reservations");
   const [emailGeneratorTab, setEmailGeneratorTab] = useState<"presentations" | "catering">("presentations");
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleNavigateToEmailGenerator = (tab: "presentations" | "catering") => {
     setEmailGeneratorTab(tab);
@@ -42,75 +41,56 @@ function App() {
     }
   };
 
-  const NavItem = ({
-    view,
-    icon: Icon,
-    label,
-  }: {
-    view: View;
-    icon: any;
-    label: string;
-  }) => (
-    <button
-      onClick={() => setActiveView(view)}
-      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-xs font-medium transition-colors ${
-        activeView === view
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
-    </button>
-  );
-
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/20 flex flex-col fixed inset-y-0 left-0 z-10">
-        <div className="p-6">
-          <div className="flex flex-col items-center space-y-1">
-            {/* ILC Logo */}
-            <img src={ilcLogo} alt="ILC Logo" className="w-12 h-12 object-contain" />
-            <div className="text-center">
-              <p className="font-bold text-xl text-primary">Outreach Dashboard</p>
-            </div>
-          </div>
+      <aside
+        className="border-r bg-muted/20 flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-200 overflow-hidden"
+        style={{ width: collapsed ? "68px" : "256px" }}
+      >
+        {/* Logo + title */}
+        <div className="p-3 flex flex-col items-center gap-2">
+          <img src={ilcLogo} alt="ILC Logo" className="w-12 h-12 object-contain shrink-0" />
+          {!collapsed && (
+            <p className="font-bold text-xl text-primary leading-tight text-center">Outreach Dashboard</p>
+          )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-2">
-          <NavItem
-            view="reservations"
-            icon={CalendarCheck}
-            label="Event Tracker"
-          />
-          <NavItem
-            view="email-gen"
-            icon={Mail}
-            label="Email Generator"
-          />
-          <NavItem
-            view="notes"
-            icon={FileText}
-            label="Meeting Notes & Agendas"
-          />
-          <NavItem
-            view="inventory"
-            icon={Package}
-            label="Inventory"
-          />
+        {/* Nav */}
+        <nav className={`flex-1 px-4 space-y-2 mt-1 ${collapsed ? "flex flex-col justify-center" : ""}`} style={collapsed ? { paddingBottom: "400%" } : {}}>
+          {navItems.map(({ view, icon: Icon, label }) => (
+            <button
+              key={view}
+              onClick={() => setActiveView(view)}
+              title={label}
+              className={`w-full flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors
+                ${collapsed ? "justify-center" : "gap-3 space-x-3"}
+                ${activeView === view
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
+                }`}
+            >
+              <Icon className="h-5 w-5 shrink-0" />
+              {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+            </button>
+          ))}
         </nav>
 
-        <div className="p-4 border-t text-xs text-muted-foreground text-center">
-          v1.0.0
-        </div>
+        {/* Toggle button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="w-full mb-3 flex items-center justify-center gap-2 py-4 px-3 border-t bg-background text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-sm font-medium"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4" /><span>Collapse</span></>}
+        </button>
+
+
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8 overflow-auto h-screen">
-        <div className="max-w-5xl mx-auto">
-          {renderContent()}
-        </div>
+      <main className="flex-1 pt-6 px-6 pb-4 overflow-auto h-screen">
+        {renderContent()}
       </main>
       <Toaster />
     </div>
