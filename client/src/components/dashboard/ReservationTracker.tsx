@@ -104,7 +104,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
       id: "sample1", name: "Tabling", date: new Date(),
       startTime: "11:00 AM", endTime: "2:00 PM", location: "Illini Union",
       staff: ["Aniya", "Jenna", "Samridhi", "Taya", "Vaanathi"],
-      spaceStatus: "submitted", cateringStatus: "pending", notes: "",
+      spaceStatus: "submitted", cateringStatus: "pending", notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     }];
   });
 
@@ -121,7 +121,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
     return [{
       id: "sample2", course: "LEAD 260", instructorName: "Jennifer Smist",
       instructorEmail: "jsmist@illinois.edu", date: new Date(),
-      time: "11:00 AM", location: "103 Bevier Hall", staff: ["Samridhi"], notes: "",
+      time: "11:00 AM", location: "103 Bevier Hall", staff: ["Samridhi"], notes: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     }];
   });
 
@@ -246,23 +246,24 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
     toast.success("Event duplicated");
   };
 
-  const [pendingComplete, setPendingComplete] = useState<{ event: TablingEvent | PresentationEvent, interacted: number | "" } | null>(null);
+  // Updated pendingComplete to include notes
+  const [pendingComplete, setPendingComplete] = useState<{ event: TablingEvent | PresentationEvent, interacted: number | "", notes: string } | null>(null);
 
   const handleMarkComplete = (event: TablingEvent | PresentationEvent) => {
-    setPendingComplete({ event, interacted: "" });
+    setPendingComplete({ event, interacted: "", notes: "" });
   };
 
   const confirmMarkComplete = () => {
     if (!pendingComplete) return;
-    const { event, interacted } = pendingComplete;
+    const { event, interacted, notes } = pendingComplete;
     if (activeTab === "tabling" || event.hasOwnProperty("startTime")) {
       const e = event as TablingEvent;
       setTablingEvents(tablingEvents.filter(x => x.id !== e.id));
-      setCompletedEvents([...completedEvents, { id: e.id, name: e.name, date: e.date, time: `${e.startTime} - ${e.endTime}`, location: e.location, interacted, source: "tabling", notes: e.notes || "", originalEvent: e }]);
+      setCompletedEvents([...completedEvents, { id: e.id, name: e.name, date: e.date, time: `${e.startTime} - ${e.endTime}`, location: e.location, interacted, source: "tabling", notes, originalEvent: e }]);
     } else {
       const e = event as PresentationEvent;
       setPresentationEvents(presentationEvents.filter(x => x.id !== e.id));
-      setCompletedEvents([...completedEvents, { id: e.id, name: e.course, date: e.date, time: e.time, location: e.location, interacted, source: "presentations", notes: e.notes || "", originalEvent: e }]);
+      setCompletedEvents([...completedEvents, { id: e.id, name: e.course, date: e.date, time: e.time, location: e.location, interacted, source: "presentations", notes, originalEvent: e }]);
     }
     setPendingComplete(null);
     toast.success("Event marked as complete");
@@ -282,7 +283,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
   const getStatusColor = (status: RequestStatus) => {
     switch (status) {
       case "pending": return { backgroundColor: "#e8e5c3", color: "#111" };
-      case "submitted": return { backgroundColor: "#1a7e62", color: "#111" };
+      case "submitted": return { backgroundColor: "#4f9581", color: "#111" };
       case "n/a": return { backgroundColor: "#f3f3f5", color: "#111" };
       default: return {};
     }
@@ -291,18 +292,23 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
   const openAddDialog = () => { setEditingEvent(null); resetNewEvents(); setIsDialogOpen(true); };
 
   const statusColStyle: React.CSSProperties = { minWidth: "140px", width: "140px", textAlign: "center" };
-  const notesColStyle: React.CSSProperties = { minWidth: "280px", width: "280px", textAlign: "center" };
+  const notesColStyle: React.CSSProperties = { minWidth: "280px", width: "280px" };
   const notesCellStyle: React.CSSProperties = { minWidth: "280px", width: "280px", whiteSpace: "normal", wordBreak: "normal", overflowWrap: "break-word", verticalAlign: "top", padding: "8px 12px" };
   const topCell: React.CSSProperties = { verticalAlign: "top" };
 
   const taStyle = "col-span-3 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Event Tracker</h2>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
+      <style>{`
+        thead tr th { padding-top: 14px !important; padding-bottom: 14px !important; }
+        #event-tracker-card { gap: 0 !important; }
+        #event-tracker-card > div:last-child { padding-top: 0 !important; }
+      `}</style>
+      <h2 className="text-2xl font-bold tracking-tight" style={{ marginBottom: "20px" }}>Event Tracker</h2>
 
       {/* Tabs */}
-      <div className="flex space-x-2 border-b">
+      <div className="flex space-x-2 border-b" style={{ marginBottom: "16px" }}>
         {["tabling", "presentations", "completed"].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab as any)}
             className={cn("px-4 py-2 font-medium", activeTab === tab ? "border-b-2 border-primary text-primary" : "text-muted-foreground")}>
@@ -312,68 +318,66 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
       </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center min-h-[40px]">
-            <CardTitle>
-              {activeTab === "tabling" ? "Tabling Events" : activeTab === "presentations" ? "Presentations" : "Completed Events"}
-            </CardTitle>
-            <div className="flex gap-2 items-center">
-              {activeTab === "tabling" && (<>
-                <Button variant="outline" onClick={() => window.open("https://illiniunion.illinois.edu/EventServices/SubmitRequest.aspx", "_blank")}>Reserve Space</Button>
-                <Button variant="outline" onClick={() => onNavigateToEmailGenerator?.('catering')}>Email Catering</Button>
-                <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
-              </>)}
-              {activeTab === "presentations" && (<>
-                <Button variant="outline" onClick={() => onNavigateToEmailGenerator?.('presentations')}>Email Instructor</Button>
-                <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
-              </>)}
-              {activeTab === "completed" && (<>
-                <Button variant="outline" className="pointer-events-none">
-                  Total # Interacted: {completedEvents.reduce((sum, e) => sum + (typeof e.interacted === 'number' ? e.interacted : 0), 0)}
-                </Button>
-                <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
-              </>)}
-            </div>
+      <Card id="event-tracker-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", padding: "12px 24px 12px 24px" }}>
+          <CardTitle>
+            {activeTab === "tabling" ? "Tabling Events" : activeTab === "presentations" ? "Presentations" : "Completed Events"}
+          </CardTitle>
+          <div className="flex flex-wrap gap-2 items-center">
+            {activeTab === "tabling" && (<>
+              <Button variant="outline" onClick={() => window.open("https://illiniunion.illinois.edu/EventServices/SubmitRequest.aspx", "_blank")}>Reserve Space</Button>
+              <Button variant="outline" onClick={() => onNavigateToEmailGenerator?.('catering')}>Email Catering</Button>
+              <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
+            </>)}
+            {activeTab === "presentations" && (<>
+              <Button variant="outline" onClick={() => onNavigateToEmailGenerator?.('presentations')}>Email Instructor</Button>
+              <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
+            </>)}
+            {activeTab === "completed" && (<>
+              <Button variant="outline" className="pointer-events-none">
+                Total # Interacted: {completedEvents.reduce((sum, e) => sum + (typeof e.interacted === 'number' ? e.interacted : 0), 0)}
+              </Button>
+              <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" />Add Event</Button>
+            </>)}
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div style={{ borderTop: "1px solid hsl(var(--border))", padding: "0 24px 16px 24px" }}>
           <Table>
             <TableHeader>
               <TableRow>
                 {activeTab === "tabling" && (<>
-                  <TableHead className="text-center">Event Name</TableHead>
+                  <TableHead>Event Name</TableHead>
                   <TableHead className="text-center">Date</TableHead>
                   <TableHead className="text-center">Start</TableHead>
                   <TableHead className="text-center">End</TableHead>
-                  <TableHead className="text-center">Location</TableHead>
-                  <TableHead className="text-center">Staff</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Staff</TableHead>
                   <TableHead className="text-center" style={statusColStyle}>Space Status</TableHead>
                   <TableHead className="text-center" style={statusColStyle}>Catering Status</TableHead>
-                  <TableHead className="text-center" style={notesColStyle}>Notes</TableHead>
+                  <TableHead style={notesColStyle}>Notes</TableHead>
                   <TableHead className="text-center">Complete</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </>)}
                 {activeTab === "presentations" && (<>
-                  <TableHead className="text-center">Course</TableHead>
-                  <TableHead className="text-center">Instructor Name</TableHead>
-                  <TableHead className="text-center">Instructor Email</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Instructor Name</TableHead>
+                  <TableHead>Instructor Email</TableHead>
                   <TableHead className="text-center">Date</TableHead>
                   <TableHead className="text-center">Time</TableHead>
-                  <TableHead className="text-center">Location</TableHead>
-                  <TableHead className="text-center">Staff</TableHead>
-                  <TableHead className="text-center" style={notesColStyle}>Notes</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Staff</TableHead>
+                  <TableHead style={notesColStyle}>Notes</TableHead>
                   <TableHead className="text-center">Complete</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </>)}
                 {activeTab === "completed" && (<>
-                  <TableHead className="text-center">Event Name</TableHead>
+                  <TableHead>Event Name</TableHead>
                   <TableHead className="text-center">Event Type</TableHead>
                   <TableHead className="text-center">Date</TableHead>
                   <TableHead className="text-center">Time</TableHead>
-                  <TableHead className="text-center">Location</TableHead>
+                  <TableHead>Location</TableHead>
                   <TableHead className="text-center"># Interacted</TableHead>
-                  <TableHead className="text-center" style={notesColStyle}>Notes</TableHead>
+                  <TableHead style={notesColStyle}>Notes</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </>)}
               </TableRow>
@@ -384,13 +388,13 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
                   <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">No events yet. Click "Add Event" to get started.</TableCell></TableRow>
                 ) : tablingEvents.map(event => (
                   <TableRow key={event.id}>
-                    <TableCell className="text-center" style={topCell}>{event.name}</TableCell>
+                    <TableCell style={topCell}>{event.name}</TableCell>
                     <TableCell className="text-center" style={topCell}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
                     <TableCell className="text-center" style={topCell}>{event.startTime}</TableCell>
                     <TableCell className="text-center" style={topCell}>{event.endTime}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.location}</TableCell>
-                    <TableCell className="text-center" style={topCell}>
-                      <div className="flex flex-col gap-1 items-center">
+                    <TableCell style={topCell}>{event.location}</TableCell>
+                    <TableCell style={topCell}>
+                      <div className="flex flex-col gap-1 items-start">
                         {event.staff.filter(s => s.trim()).map((name, idx) => <div key={idx}>{name}</div>)}
                       </div>
                     </TableCell>
@@ -421,7 +425,7 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
                     <TableCell style={notesCellStyle}><span className="text-sm text-muted-foreground">{event.notes}</span></TableCell>
                     <TableCell className="text-center" style={topCell}>
                       <div className="flex justify-center" style={{ paddingTop: "9px" }}>
-                        <input type="checkbox" onChange={() => handleMarkComplete(event)} className="cursor-pointer" />
+                        <input type="checkbox" checked={false} onChange={e => { handleMarkComplete(event); e.target.checked = false; }} className="cursor-pointer" />
                       </div>
                     </TableCell>
                     <TableCell style={topCell}>
@@ -439,21 +443,21 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
                   <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No events yet. Click "Add Event" to get started.</TableCell></TableRow>
                 ) : presentationEvents.map(event => (
                   <TableRow key={event.id}>
-                    <TableCell className="text-center" style={topCell}>{event.course}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.instructorName}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.instructorEmail}</TableCell>
+                    <TableCell style={topCell}>{event.course}</TableCell>
+                    <TableCell style={topCell}>{event.instructorName}</TableCell>
+                    <TableCell style={topCell}>{event.instructorEmail}</TableCell>
                     <TableCell className="text-center" style={topCell}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
                     <TableCell className="text-center" style={topCell}>{event.time}</TableCell>
-                    <TableCell className="text-center" style={topCell}>{event.location}</TableCell>
-                    <TableCell className="text-center" style={topCell}>
-                      <div className="flex flex-col gap-1 items-center">
+                    <TableCell style={topCell}>{event.location}</TableCell>
+                    <TableCell style={topCell}>
+                      <div className="flex flex-col gap-1 items-start">
                         {event.staff.filter(s => s.trim()).map((name, idx) => <div key={idx}>{name}</div>)}
                       </div>
                     </TableCell>
                     <TableCell style={notesCellStyle}><span className="text-sm text-muted-foreground">{event.notes}</span></TableCell>
                     <TableCell className="text-center" style={topCell}>
                       <div className="flex justify-center" style={{ paddingTop: "9px" }}>
-                        <input type="checkbox" onChange={() => handleMarkComplete(event)} className="cursor-pointer" />
+                        <input type="checkbox" checked={false} onChange={e => { handleMarkComplete(event); e.target.checked = false; }} className="cursor-pointer" />
                       </div>
                     </TableCell>
                     <TableCell style={topCell}>
@@ -471,11 +475,11 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
                   <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No completed events yet.</TableCell></TableRow>
                 ) : completedEvents.map(event => (
                   <TableRow key={event.id}>
-                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.name}</TableCell>
-                    <TableCell className="text-center capitalize" style={{ ...topCell, paddingTop: "16px" }}>{event.source === "tabling" ? "Tabling" : "Presentation"}</TableCell>
-                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
-                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.time}</TableCell>
-                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "16px" }}>{event.location}</TableCell>
+                    <TableCell style={{ ...topCell, paddingTop: "10px" }}>{event.name}</TableCell>
+                    <TableCell className="text-center capitalize" style={{ ...topCell, paddingTop: "10px" }}>{event.source === "tabling" ? "Tabling" : "Presentation"}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "10px" }}>{event.date ? format(event.date, "MMM d, yyyy") : ""}</TableCell>
+                    <TableCell className="text-center" style={{ ...topCell, paddingTop: "10px" }}>{event.time}</TableCell>
+                    <TableCell style={{ ...topCell, paddingTop: "10px" }}>{event.location}</TableCell>
                     <TableCell className="text-center" style={topCell}>
                       <Input type="number" value={event.interacted} onChange={e => { const v = e.target.value; updateCompletedInteracted(event.id, v === "" ? "" : parseInt(v)); }} className="w-20 mx-auto" />
                     </TableCell>
@@ -493,11 +497,17 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
               )}
             </TableBody>
           </Table>
-        </CardContent>
+        </div>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={false}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto z-50 top-[5%]">    
+        {isDialogOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/80"
+            onClick={() => setIsDialogOpen(false)}
+          />
+        )}
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto z-50">
           <DialogHeader>
             <DialogTitle>{editingEvent ? "Edit Event" : "Add Event"}</DialogTitle>
             <DialogDescription>Fill in event details below.</DialogDescription>
@@ -711,21 +721,39 @@ export function ReservationTracker({ onNavigateToEmailGenerator }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Mark Complete — interactions prompt */}
+
+      {/* Mark Complete — interactions + notes prompt */}
       <Dialog open={!!pendingComplete} onOpenChange={(open) => { if (!open) setPendingComplete(null); }} modal={false}>
+        {pendingComplete && (
+          <div className="fixed inset-0 z-40 bg-black/80" onClick={() => setPendingComplete(null)} />
+        )}
         <DialogContent className="sm:max-w-[360px] z-50">
           <DialogHeader>
             <DialogTitle>Mark as Complete</DialogTitle>
-            <DialogDescription>How many people did you interact with?</DialogDescription>
+            <DialogDescription>Add any final details for this event (optional).</DialogDescription>
           </DialogHeader>
-          <div className="py-2">
-            <Input
-              type="number"
-              placeholder="e.g., 50 (optional)"
-              value={pendingComplete?.interacted ?? ""}
-              onChange={e => setPendingComplete(prev => prev ? { ...prev, interacted: e.target.value === "" ? "" : parseInt(e.target.value) } : prev)}
-              className="w-full"
-            />
+          <div className="py-2 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pc-interacted"># Interacted</Label>
+              <Input
+                id="pc-interacted"
+                type="number"
+                placeholder="e.g., 50 (optional)"
+                value={pendingComplete?.interacted ?? ""}
+                onChange={e => setPendingComplete(prev => prev ? { ...prev, interacted: e.target.value === "" ? "" : parseInt(e.target.value) } : prev)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pc-notes">Additional Notes</Label>
+              <textarea
+                id="pc-notes"
+                placeholder="Add notes about this event"
+                value={pendingComplete?.notes ?? ""}
+                onChange={e => setPendingComplete(prev => prev ? { ...prev, notes: e.target.value } : prev)}
+                className={`min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingComplete(null)}>Cancel</Button>
