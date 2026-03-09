@@ -61,7 +61,10 @@ function App() {
           {navItems.map(({ view, icon: Icon, label }) => (
             <button
               key={view}
-              onClick={() => setActiveView(view)}
+              onClick={() => {
+                setActiveView(view);
+                setCollapsed(false);
+              }}
               title={label}
               className={`w-full flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors
                 ${collapsed ? "justify-center" : "gap-3 space-x-3"}
@@ -84,8 +87,6 @@ function App() {
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4" /><span>Collapse</span></>}
         </button>
-
-
       </aside>
 
       {/* Main Content */}
