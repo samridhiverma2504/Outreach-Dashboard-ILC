@@ -19,6 +19,7 @@
 
 **Meeting Notes and Agendas**
   * Add, edit, delete meeting notes/agendas
+  * Save the file as pdf or word doc
 
 **Inventory Tracker**
   * Add, edit, delete items in the inventory list
