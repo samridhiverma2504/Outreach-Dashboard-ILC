@@ -148,7 +148,7 @@ function QuillEditor({ initialValue, onChange, placeholder }: {
 
     const q = new Quill(editorDiv, {
       theme: "snow",
-      placeholder: placeholder ?? "Start typing...",
+      placeholder: placeholder ?? "Start typing",
       modules: {
         toolbar: {
           container: toolbarEl,
@@ -554,7 +554,7 @@ export function MeetingNotes() {
                 ))}
                 {filteredNotes.length === 0 && (
                   <p className="text-center text-muted-foreground py-8 text-sm">
-                    No {activeTab === 'notes' ? 'notes' : 'agendas'} yet. Click "New {activeTab === 'notes' ? 'Note' : 'Agenda'}" to create one.
+                    No {activeTab === 'notes' ? 'notes' : 'agendas'} yet. Click "+ New" to create one.
                   </p>
                 )}
               </div>
@@ -614,7 +614,7 @@ export function MeetingNotes() {
                   key={activeNote.id}
                   initialValue={activeNote.content}
                   onChange={handleUpdateNote}
-                  placeholder="Type your meeting notes here..."
+                  placeholder="Type your meeting notes here."
                 />
               </div>
             </>
@@ -656,7 +656,7 @@ export function MeetingNotes() {
                 </Popover>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="newTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span></Label>
+                <Label htmlFor="newTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
                 <Input id="newTitle" placeholder={format(newNoteDate, 'MMMM d, yyyy')} value={newNoteTitle} onChange={(e) => setNewNoteTitle(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -702,11 +702,11 @@ export function MeetingNotes() {
                 </Popover>
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="editTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional — defaults to date)</span></Label>
+                <Label htmlFor="editTitle">Title <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
                 <Input id="editTitle" placeholder={format(editDate, 'MMMM d, yyyy')} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="editNoteTaker">Note Taker</Label>
+                <Label htmlFor="editNoteTaker">Notetaker <span className="text-muted-foreground font-normal text-xs">(optional)</span></Label>
                 <Input id="editNoteTaker" placeholder="e.g., Samridhi" value={editNoteTaker} onChange={(e) => setEditNoteTaker(e.target.value)} />
               </div>
             </div>
