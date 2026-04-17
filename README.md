@@ -1,7 +1,7 @@
 # Outreach Dashboard
   
 A React based dashboard for managing outreach at the Illinois Leadership Center.
----
+
 ## Features
 **Event Tracker**
   * Add details for tabling events
@@ -24,7 +24,7 @@ A React based dashboard for managing outreach at the Illinois Leadership Center.
 **Inventory Tracker**
   * Add, edit, delete items in the inventory list
   * Flags items as low stock if quantity is less than 20
----
+  
 ## Getting Started
 **Clone the Repository**
 ```bash
@@ -46,4 +46,3 @@ npm run dev
 ```
 **Open Browser**
   * App runs at `http://localhost:3000`
----
