@@ -28,7 +28,7 @@ A React based dashboard for managing outreach at the Illinois Leadership Center.
 ## Getting Started
 **Clone the Repository**
 ```bash
-git clone https://github.com/samridhiverma2504/Outreach-Dashboard-ILC
+git clone https://github.com/samridhi49/Outreach-Dashboard-ILC
 ```
 ```bash
 cd Outreach-Dashboard-ILC
